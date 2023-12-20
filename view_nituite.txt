@@ -1,0 +1,161 @@
+【ViewSets】
+★routerを登録したとき
+from rest_framework import viewsets
+from .models import Book
+from .serializers import BookSerializer
+
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()  # 正しいクエリセットの指定(名前間違えちゃだめ！)
+    serializer_class = BookSerializer  # 正しいシリアライザクラスの指定(名前間違えちゃだめ！)
+★routerを登録したとき
+
+●最低限やること
+　＊viewsetsの登録
+　＊モデルのインポート
+　＊シリアライザーのインポート
+　＊queryset(対象モデルの登録)
+　＊serializer_class = BookSerializer(対象シリアライザの登録) 
+★routerを登録したとき
+→メリット
+レスポンスの生成やHTTPステータスの設定などは自動的にハンドリングされますので、return文を明示的に書く必要はありません。
+(returnが不要)
+
+(（list, create, retrieve, update, partial_update, destroy)が不要
+＊もちろんserializerの実装は必要だよ！
+from rest_framework import serializers
+from .models import Book
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ['id', 'title', 'author']
+
+【APIVIEW】
+class BookListView(APIView):
+    def get(self, request):
+        books = Book.objects.all()
+        data = [{"title": book.title, "author": book.author} for book in books]
+        return Response(data)
+    
+    def create(self, request):
+        serializer = BookSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+●最低限やること
+　＊viewsetsの登録
+　＊モデルのインポート
+　＊シリアライザーのインポート
+　＊queryset(対象モデルの登録)
+　＊serializer_class = BookSerializer(対象シリアライザの登録) 
+★余計な手間
+①メソッド名(CRUD)
+②modelから取得
+③連想配列で返却されるので、{"title": book.title, "author": book.author}の形にして直す
+④returnにて返却する
+
+
+
+
+★以下参考資料
+【ViewSets】
+https://www.django-rest-framework.org/api-guide/viewsets/#viewset
+https://www.django-rest-framework.org/api-guide/viewsets/#modelviewset
+https://www.django-rest-framework.org/api-guide/viewsets/#actions
+【APIVIEW】
+https://www.django-rest-framework.org/api-guide/views/#apiview
+
+
+
+
+【VIEWSET】＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+
+Django REST frameworkのviewsetsモジュールには、ModelViewSetなどのクラスに含まれる主要な属性やメソッドがいくつかあります。以下にいくつかの重要な属性とメソッドを示します。
+
+属性:
+
+queryset: ビューが操作するデータベースのクエリセットを指定します。デフォルトではモデルの全てのレコードを取得します。
+
+serializer_class: 使用するシリアライザクラスを指定します。データのシリアライズやデシリアライズに使用されます。
+
+authentication_classes: ビューで使用する認証クラスを指定します。
+
+permission_classes: ビューのアクセス制御を行うためのパーミッションクラスを指定します。
+
+filter_backends: ビューの結果に対するフィルタリング方法を指定します。
+
+pagination_class: ページネーションを行うためのクラスを指定します。
+
+renderer_classes: レスポンスのレンダリング方法を指定します。
+
+メソッド:
+
+**list(self, request, *args, kwargs): クエリセットからオブジェクトのリストを返します。GETメソッドでアクセスされます。
+
+**create(self, request, *args, kwargs): クエリセットに新しいオブジェクトを作成します。POSTメソッドでアクセスされます。
+
+**retrieve(self, request, *args, kwargs): 特定のオブジェクトの詳細情報を返します。GETメソッドでアクセスされます。
+
+**update(self, request, *args, kwargs): 特定のオブジェクトを更新します。PUTメソッドでアクセスされます。
+
+**partial_update(self, request, *args, kwargs): 特定のオブジェクトの一部を更新します。PATCHメソッドでアクセスされます。
+
+**destroy(self, request, *args, kwargs): 特定のオブジェクトを削除します。DELETEメソッドでアクセスされます。
+
+これらの属性とメソッドを使用することで、CRUD操作に関連するAPIビューを簡単に定義できます。詳細な情報については、Django REST frameworkの公式ドキュメントを参照してください。
+
+【APIView】＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+APIViewクラスは、Django REST frameworkでAPIビューを作成するための基本的なクラスです。このクラスを継承することで、HTTPメソッド（GET、POST、PUT、DELETEなど）に応じた動作を定義することができます。以下に主なAPIViewクラスのメソッドとその役割を示します。
+
+**get(self, request, *args, kwargs):
+GETリクエストに対する処理を定義します。例えば、リソースの一覧を取得するための処理を記述します。
+
+**post(self, request, *args, kwargs):
+POSTリクエストに対する処理を定義します。新しいリソースを作成するための処理を記述します。
+
+**put(self, request, *args, kwargs):
+PUTリクエストに対する処理を定義します。特定のリソースを完全に更新するための処理を記述します。
+
+**patch(self, request, *args, kwargs):
+PATCHリクエストに対する処理を定義します。特定のリソースの一部を更新するための処理を記述します。
+
+**delete(self, request, *args, kwargs):
+DELETEリクエストに対する処理を定義します。特定のリソースを削除するための処理を記述します。
+
+これらのメソッドは、HTTPメソッドに対応するリクエストがAPIビューに送信されたときに自動的に呼び出されます。APIViewクラスを継承し、これらのメソッドをオーバーライドすることで、APIビューの振る舞いをカスタマイズできます。
+
+また、APIViewクラスには他にも多くの便利なメソッドが含まれており、リクエストやレスポンスの操作、認証、パーミッションのチェックなどに利用できます。詳細な情報は公式ドキュメントを参照してください：
+
+APIViewクラス
+
+
+
+User
+後属性も
+ChatGPT
+APIViewクラスには、ビューの動作をカスタマイズするために使用するいくつかの重要な属性があります。以下にいくつかの主要な属性とその役割を示します。
+
+属性:
+
+permission_classes: ビューのアクセス制御を行うためのパーミッションクラスを指定します。リスト形式で複数のパーミッションクラスを指定できます。
+
+authentication_classes: ビューで使用する認証クラスを指定します。リスト形式で複数の認証クラスを指定できます。
+
+renderer_classes: レスポンスのレンダリング方法を指定します。リスト形式で複数のレンダラークラスを指定できます。
+
+parser_classes: リクエストの解析方法を指定します。リスト形式で複数のパーサークラスを指定できます。
+
+throttle_classes: ビューで使用するスロットリング（APIのアクセス制限）クラスを指定します。リスト形式で複数のスロットリングクラスを指定できます。
+
+serializer_class: 使用するシリアライザクラスを指定します。データのシリアライズやデシリアライズに使用されます。
+
+queryset: ビューが操作するデータベースのクエリセットを指定します。
+
+pagination_class: ページネーションを行うためのクラスを指定します。
+
+lookup_field: 特定のオブジェクトを識別するためのフィールド名を指定します。
+
+これらの属性を適切に設定することで、APIビューの振る舞いや設定をカスタマイズすることができます。詳細な情報は公式ドキュメントを参照してください
+

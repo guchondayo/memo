@@ -1,0 +1,96 @@
+【S3をつかってフロントエンドのAWSをデプロイしてみよう】
+★参考資料
+https://zenn.dev/ncdc/articles/ec02e6ce30ff8b#%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF%E3%83%91%E3%83%96%E3%83%AA%E3%83%83%E3%82%AF%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9-(%E3%83%90%E3%82%B1%E3%83%83%E3%83%88%E8%A8%AD%E5%AE%9A)
+https://qiita.com/usaitoen/items/77bdb81a1ce1852b30ca
+https://qiita.com/usaitoen/items/77bdb81a1ce1852b30ca#%E3%82%B3%E3%83%B3%E3%83%86%E3%83%B3%E3%83%84%E3%81%AE%E3%82%A2%E3%83%83%E3%83%97%E3%83%AD%E3%83%BC%E3%83%89
+★メリット
+＊Vueプロジェクトがめちゃ簡単に作ることができる
+＊DNSがいらない
+＊安い
+＊ルーティングもいらん
+★主なフロー
+
+1.バケットを作成
+1-1:バケットを作成
+C:\Users\utoto>aws s3api create-bucket --bucket sayhellotobike-frontend --region ap-northeast-1 --create-bucket-configuration LocationConstraint=ap-northeast-1 --profile test001
+{
+    "Location": "http://sayhellotobike-frontend.s3.amazonaws.com/"
+}
+＊以下で作成したらがっつりハマった【リージョンんの指定がめんどくさい】
+aws s3api create-bucket --bucket sayhellotobike_frontend --region ap-northeast-1 --profile test001
+https://carametal.hatenablog.com/entry/2020/12/03/201206
+1-2タグ付け
+aws s3 ls
+2.S3へのアップロード:作成されたdistディレクトリをS3バケットにアップロードします。AWS CLIを使用して次のコマンドを実行します。
+2-1:アップロード
+PS C:\Users\utoto\OneDrive\デスクトップ\sidejob\sayhellotobike_frontend> aws s3 sync dist/ s3://sayhellotobike-frontend  --profile test001
+upload: dist\css\about.3b3fe7bf.css to s3://sayhellotobike-frontend/css/about.3b3fe7bf.css
+upload: dist\css\app.b7952b67.css to s3://sayhellotobike-frontend/css/app.b7952b67.css
+upload: dist\css\chunk-vendors.7d75f85b.css to s3://sayhellotobike-frontend/css/chunk-vendors.7d75f85b.css
+upload: dist\img\スタート.8b16ad62.jpg to s3://sayhellotobike-frontend/img/スタート.8b16ad62.jpg
+upload: dist\favicon.ico to s3://sayhellotobike-frontend/favicon.ico
+upload: dist\index.html to s3://sayhellotobike-frontend/index.html
+upload: dist\img\バイク.27351b6e.jpg to s3://sayhellotobike-frontend/img/バイク.27351b6e.jpg
+upload: dist\myicon.jpeg to s3://sayhellotobike-frontend/myicon.jpeg
+upload: dist\js\app.627d2e1d.js to s3://sayhellotobike-frontend/js/app.627d2e1d.js
+upload: dist\js\app.627d2e1d.js.map to s3://sayhellotobike-frontend/js/app.627d2e1d.js.map
+upload: dist\js\about.b39d6567.js to s3://sayhellotobike-frontend/js/about.b39d6567.js
+upload: dist\js\about.b39d6567.js.map to s3://sayhellotobike-frontend/js/about.b39d6567.js.map
+upload: dist\js\chunk-vendors.90895db5.js to s3://sayhellotobike-frontend/js/chunk-vendors.90895db5.js
+upload: dist\js\chunk-vendors.90895db5.js.map to s3://sayhellotobike-frontend/js/chunk-vendors.90895db5.js.map
+2-2：中身がアップロードされているか確認しましょう。
+【エラーについて】
+aws s3 ls s3://sayhellotobike-frontend  --profile test001
+PS C:\Users\utoto\OneDrive\デスクトップ\sidejob\sayhellotobike_frontend>
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<Error>
+<Code>AccessDenied</Code>
+<Message>Access Denied</Message>
+<RequestId>XXADZWV8GQJQ3W99</RequestId>
+<HostId>8XRtu89Jvw9ZXkOkeJxX8hpxi+4hWOp+L3y876FXpJtVp5Zv/2z79emxiq34joHPnUo2mp3ydew=</HostId>
+</Error>
+
+⇒こうなるので、バケットポリシーを作ってあげましょう！
+
+＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊ここからはほかの設定の話＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+3.静的ウェブホスティングの有効化
+★3-1静的ウェブホスティングの有効化:
+S3コンソールで、バケットのプロパティから「静的ウェブホスティング」を有効にします。そして、Index documentをindex.htmlに、Error documentを設定すると、Vue Routerでのルーティングが正しく動作します。
+PS C:\Users\utoto\OneDrive\デスクトップ\sidejob\sayhellotobike_frontend> aws s3 website s3://sayhellotobike-frontend --index-document index.html --error-document error.html --profile test001
+4.セキュリティ関係
+4-1バケットポリシーファイルを記述する:
+C:\aws>aws s3api put-bucket-policy --bucket sayhellotobike-frontend --policy file://C:\aws\policy.json --profile test001
+以下書き方
+https://docs.aws.amazon.com/ja_jp/AmazonS3/latest/userguide/HostingWebsiteOnS3Setup.html#step3-add-bucket-policy-make-content-public
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": ["arn:aws:s3:::sayhellotobike-frontend/*"]
+    }
+  ]
+}
+4-2バケットポリシーを実際に変更する:
+C:\aws>aws s3api put-bucket-policy --bucket sayhellotobike-frontend --policy file://C:\aws\policy.json --profile test001
+＊がっつりハマった【画像3】
+1.JSONfileはfile:指定
+https://qiita.com/tsukamoto/items/fd6b4f300941d7ee43b3
+2.GUIでブロックでバグリックアクセスの設定
+https://zenn.dev/ncdc/articles/ec02e6ce30ff8b#%E3%83%96%E3%83%AD%E3%83%83%E3%82%AF%E3%83%91%E3%83%96%E3%83%AA%E3%83%83%E3%82%AF%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9-(%E3%83%90%E3%82%B1%E3%83%83%E3%83%88%E8%A8%AD%E5%AE%9A)
+
+次はACLを設定しないとだめかな、、、⇒大丈夫だった！
+＊、バケットポリシーとACLの違い
+基本的な違いは、ACLが主に個々のオブジェクトやバケットに対するアクセス制御を行うのに対し、バケットポリシーはバケット全体に対するアクセス制御を行う点です。バケットポリシーはより高度な条件や設定を行えるため、一般的にはバケットポリシーを使用してアクセス制御を設定することが推奨されています。
+1.バケット - トップレベルの Amazon S3 フォルダ。
+2.プレフィックス - バケット内の Amazon S3 フォルダ。
+3.オブジェクト - Amazon S3 バケットでホストされているすべてのアイテム。
+https://codezine.jp/article/detail/14939
+
+5.静的ウェブホスティングの有効化に書いてあるアドレスでアクセスできるよ
+http://sayhellotobike-frontend.s3-website-ap-northeast-1.amazonaws.com
+
+

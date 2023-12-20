@@ -1,0 +1,365 @@
+【AWS接続方法EC2のログイン方法】
+＊＊準備段階＊＊
+1.EC2はサーバーなので、鍵でログインするために鍵を作ってあげる
+*サイトのやり方だとうまくいかなかったので公式を参考にしました。
+https://docs.aws.amazon.com/ja_jp/AWSEC2/latest/WindowsGuide/create-key-pairs.html
+aws ec2 create-key-pair --profile test001 --key-name id_aws_sayhellotobike --key-type rsa --key-format pem --query "KeyMaterial" --output text > id_aws_sayhellotobike.pem
+
+1.セキュリティグループを作成する
+1-1セキュリティグループ作成
+C:\Users\utoto>aws ec2 create-security-group --group-name sayhellobikeDevSG --description "firstSG" --vpc-id vpc-043b902b76c5972b9 --profile test001
+{
+    "GroupId": "sg-06681a50a21c76c5e"
+}
+
+
+＊セキュリティグループの詳細を確認する(これはマストか任意かどうかがわからない)
+C:\Users\utoto>aws ec2 describe-security-groups --group-ids sg-06681a50a21c76c5e --profile test001
+{
+    "SecurityGroups": [
+        {
+            "Description": "firstSG",
+            "GroupName": "sayhellobikeDevSG",
+            "IpPermissions": [],
+            "OwnerId": "515462926332",
+            "GroupId": "sg-06681a50a21c76c5e",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": [],
+                    "UserIdGroupPairs": []
+                }
+            ],
+            "VpcId": "vpc-043b902b76c5972b9"
+        }
+    ]
+}
+
+1-2セキュリティグループにプロトコルとCIDRを加える
+C:\Users\utoto>aws ec2 authorize-security-group-ingress --group-id sg-06681a50a21c76c5e --protocol tcp --port 22 --cidr 0.0.0.0/0 --profile test001
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-0fe04ba919f7ae903",
+            "GroupId": "sg-06681a50a21c76c5e",
+            "GroupOwnerId": "515462926332",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "CidrIpv4": "0.0.0.0/0"
+        }
+    ]
+}
+
+＊＊EC2サーバーの立ち上げ＊＊
+1.AMI（OSのようなもの）を決める
+【画像2:AMI】
+ami-012261b9035f8f938(2023，WINDOWS11だとむり)
+ami-035d55281a86f9439⇒これを使わないと起動できない。(１０時間はまった、、、、、)
+以下を選ばないといけなかった
+amzn2-ami-kernel-5.10-hvm-2.0.20231116.0-x86_64-gp2
+【参考】
+https://docs.aws.amazon.com/ja_jp/AL2/latest/relnotes/relnotes-al2.html
+2.ついに『EC2』を起動する*********************************************************************************
+C:\Users\utoto\.ssh>aws ec2 run-instances --image-id ami-035d55281a86f9439 --count 1 --instance-type t2.micro --key-name id_aws_sayhellotobike --security-group-ids sg-06681a50a21c76c5e --subnet-id subnet-0ea5f00cfc2b17f9c --profile test001
+{
+    "Groups": [],
+    "Instances": [
+        {
+            "AmiLaunchIndex": 0,
+            "ImageId": "ami-035d55281a86f9439",
+            "InstanceId": "i-09126680f5070d4cc",
+            "InstanceType": "t2.micro",
+            "KeyName": "id_aws_sayhellotobike",
+            "LaunchTime": "2023-12-10T08:06:06+00:00",
+            "Monitoring": {
+                "State": "disabled"
+            },
+            "Placement": {
+                "AvailabilityZone": "ap-northeast-1a",
+                "GroupName": "",
+                "Tenancy": "default"
+            },
+            "PrivateDnsName": "ip-10-0-0-73.ap-northeast-1.compute.internal",
+            "PrivateIpAddress": "10.0.0.73",
+            "ProductCodes": [],
+            "PublicDnsName": "",
+            "State": {
+                "Code": 0,
+                "Name": "pending"
+            },
+            "StateTransitionReason": "",
+            "SubnetId": "subnet-0ea5f00cfc2b17f9c",
+            "VpcId": "vpc-043b902b76c5972b9",
+            "Architecture": "x86_64",
+            "BlockDeviceMappings": [],
+            "ClientToken": "7d227f89-1d71-47ca-b63e-fc465068b454",
+            "EbsOptimized": false,
+            "EnaSupport": true,
+            "Hypervisor": "xen",
+            "NetworkInterfaces": [
+                {
+                    "Attachment": {
+                        "AttachTime": "2023-12-10T08:06:06+00:00",
+                        "AttachmentId": "eni-attach-08abda5f9fe5dfce4",
+                        "DeleteOnTermination": true,
+                        "DeviceIndex": 0,
+                        "Status": "attaching",
+                        "NetworkCardIndex": 0
+                    },
+                    "Description": "",
+                    "Groups": [
+                        {
+                            "GroupName": "sayhellobikeDevSG",
+                            "GroupId": "sg-06681a50a21c76c5e"
+                        }
+                    ],
+                    "Ipv6Addresses": [],
+                    "MacAddress": "06:1e:15:8e:4d:f5",
+                    "NetworkInterfaceId": "eni-0b2c7355be167b5d0",
+                    "OwnerId": "515462926332",
+                    "PrivateIpAddress": "10.0.0.73",
+                    "PrivateIpAddresses": [
+                        {
+                            "Primary": true,
+                            "PrivateIpAddress": "10.0.0.73"
+                        }
+                    ],
+                    "SourceDestCheck": true,
+                    "Status": "in-use",
+                    "SubnetId": "subnet-0ea5f00cfc2b17f9c",
+                    "VpcId": "vpc-043b902b76c5972b9",
+                    "InterfaceType": "interface"
+                }
+            ],
+            "RootDeviceName": "/dev/xvda",
+            "RootDeviceType": "ebs",
+            "SecurityGroups": [
+                {
+                    "GroupName": "sayhellobikeDevSG",
+                    "GroupId": "sg-06681a50a21c76c5e"
+                }
+            ],
+            "SourceDestCheck": true,
+            "StateReason": {
+                "Code": "pending",
+                "Message": "pending"
+            },
+            "VirtualizationType": "hvm",
+            "CpuOptions": {
+                "CoreCount": 1,
+                "ThreadsPerCore": 1
+            },
+            "CapacityReservationSpecification": {
+                "CapacityReservationPreference": "open"
+            },
+            "MetadataOptions": {
+                "State": "pending",
+                "HttpTokens": "optional",
+                "HttpPutResponseHopLimit": 1,
+                "HttpEndpoint": "enabled",
+                "HttpProtocolIpv6": "disabled",
+                "InstanceMetadataTags": "disabled"
+            },
+            "EnclaveOptions": {
+                "Enabled": false
+            },
+            "PrivateDnsNameOptions": {
+                "HostnameType": "ip-name",
+                "EnableResourceNameDnsARecord": false,
+                "EnableResourceNameDnsAAAARecord": false
+            },
+            "MaintenanceOptions": {
+                "AutoRecovery": "default"
+            },
+            "CurrentInstanceBootMode": "legacy-bios"
+        }
+    ],
+    "OwnerId": "515462926332",
+    "ReservationId": "r-0ebb392ac37d52098"
+}
+2-2:EC2の詳細設定方法を確認する(なぜなら、実際にEC2を扱うには『ssh接続しないとだめ。ssh接続するにはパブリックIPアドレスが必要』)
+vC:\Users\utoto>aws ec2 describe-instances --filters "Name=tag:Name,Values=sayhellotobike-frontend-EC2" --profile test001
+
+{
+    "Reservations": [
+        {
+            "Groups": [],
+            "Instances": [
+                {
+                    "AmiLaunchIndex": 0,
+                    "ImageId": "ami-0bba69335379e17f8",
+                    "InstanceId": "i-0bf8ad3887aa0030a",
+                    "InstanceType": "t2.micro",
+                    "KeyName": "AWSsayhellotobikeKeyPair",
+                    "LaunchTime": "2023-12-09T07:46:57+00:00",
+                    "Monitoring": {
+                        "State": "disabled"
+                    },
+                    "Placement": {
+                        "AvailabilityZone": "ap-northeast-1a",
+                        "GroupName": "",
+                        "Tenancy": "default"
+                    },
+                    "PrivateDnsName": "ip-10-0-0-132.ap-northeast-1.compute.internal",
+                    "PrivateIpAddress": "10.0.0.132",
+                    "ProductCodes": [],
+                    "PublicDnsName": "",
+                    "PublicIpAddress": "3.112.209.87",
+                    "State": {
+                        "Code": 16,
+                        "Name": "running"
+                    },
+                    "StateTransitionReason": "",
+                    "SubnetId": "subnet-0ea5f00cfc2b17f9c",
+                    "VpcId": "vpc-043b902b76c5972b9",
+                    "Architecture": "x86_64",
+                    "BlockDeviceMappings": [
+                        {
+                            "DeviceName": "/dev/xvda",
+                            "Ebs": {
+                                "AttachTime": "2023-12-09T07:46:58+00:00",
+                                "DeleteOnTermination": true,
+                                "Status": "attached",
+                                "VolumeId": "vol-0118200bdebac5e2c"
+                            }
+                        }
+                    ],
+                    "ClientToken": "a35b73e2-d419-4d32-88ab-4d3a2d34b0e6",
+                    "EbsOptimized": false,
+                    "EnaSupport": true,
+                    "Hypervisor": "xen",
+                    "NetworkInterfaces": [
+                        {
+                            "Association": {
+                                "IpOwnerId": "amazon",
+                                "PublicDnsName": "",
+                                "PublicIp": "3.112.209.87"
+                            },
+                            "Attachment": {
+                                "AttachTime": "2023-12-09T07:46:57+00:00",
+                                "AttachmentId": "eni-attach-082228134d6d55e92",
+                                "DeleteOnTermination": true,
+                                "DeviceIndex": 0,
+                                "Status": "attached",
+                                "NetworkCardIndex": 0
+                            },
+                            "Description": "",
+                            "Groups": [
+                                {
+                                    "GroupName": "sayhellobikeDevSG",
+                                    "GroupId": "sg-06681a50a21c76c5e"
+                                }
+                            ],
+                            "Ipv6Addresses": [],
+                            "MacAddress": "06:0c:83:19:f4:43",
+                            "NetworkInterfaceId": "eni-0f9a0aa640f8cd353",
+                            "OwnerId": "515462926332",
+                            "PrivateIpAddress": "10.0.0.132",
+                            "PrivateIpAddresses": [
+                                {
+                                    "Association": {
+                                        "IpOwnerId": "amazon",
+                                        "PublicDnsName": "",
+                                        "PublicIp": "3.112.209.87"
+                                    },
+                                    "Primary": true,
+                                    "PrivateIpAddress": "10.0.0.132"
+                                }
+                            ],
+                            "SourceDestCheck": true,
+                            "Status": "in-use",
+                            "SubnetId": "subnet-0ea5f00cfc2b17f9c",
+                            "VpcId": "vpc-043b902b76c5972b9",
+                            "InterfaceType": "interface"
+                        }
+                    ],
+                    "RootDeviceName": "/dev/xvda",
+                    "RootDeviceType": "ebs",
+                    "SecurityGroups": [
+                        {
+                            "GroupName": "sayhellobikeDevSG",
+                            "GroupId": "sg-06681a50a21c76c5e"
+                        }
+                    ],
+                    "SourceDestCheck": true,
+                    "Tags": [
+                        {
+                            "Key": "Name",
+                            "Value": "sayhellotobike-frontend-EC2"
+                        }
+                    ],
+                    "VirtualizationType": "hvm",
+                    "CpuOptions": {
+                        "CoreCount": 1,
+                        "ThreadsPerCore": 1
+                    },
+                    "CapacityReservationSpecification": {
+                        "CapacityReservationPreference": "open"
+                    },
+                    "HibernationOptions": {
+                        "Configured": false
+                    },
+                    "MetadataOptions": {
+                        "State": "applied",
+                        "HttpTokens": "optional",
+                        "HttpPutResponseHopLimit": 1,
+                        "HttpEndpoint": "enabled",
+                        "HttpProtocolIpv6": "disabled",
+                        "InstanceMetadataTags": "disabled"
+                    },
+                    "EnclaveOptions": {
+                        "Enabled": false
+                    },
+                    "PlatformDetails": "Linux/UNIX",
+                    "UsageOperation": "RunInstances",
+                    "UsageOperationUpdateTime": "2023-12-09T07:46:57+00:00",
+                    "PrivateDnsNameOptions": {
+                        "HostnameType": "ip-name",
+                        "EnableResourceNameDnsARecord": false,
+                        "EnableResourceNameDnsAAAARecord": false
+                    },
+                    "MaintenanceOptions": {
+                        "AutoRecovery": "default"
+                    },
+                    "CurrentInstanceBootMode": "legacy-bios"
+                }
+            ],
+            "OwnerId": "515462926332",
+            "ReservationId": "r-01e8c4cd99c07933c"
+        }
+    ]
+}
+
+3：＊＊実際にsshで接続してみる＊＊
+＊＊超重要！
+以下のコマンドはlinuxのみでできる
+ssh -i ~/.ssh/id_aws_sayhellotobike.pem ec2-user@3.112.209.87
+⇒chmod
+＊あとはAMIイメージの2023は使えない(まだ対応していない)
+1.teraterm5をインストールしておく
+2.teratermにてssh接続を設定する
+接続方法↓
+https://sal-blog.com/%E3%80%90%E8%B6%85%E5%88%9D%E5%BF%83%E8%80%85%E5%90%91%E3%81%91%E3%80%91aws-ec2%E4%BD%9C%E6%88%90%E3%81%A8teraterm%E3%81%A7%E3%81%AEssh%E6%8E%A5%E7%B6%9A%E6%96%B9%E6%B3%95/
+3.以下になったら成功！
+Last login: Sun Dec 10 23:15:47 2023 from kd106146040056.au-net.ne.jp
+   ,     #_
+   ~\_  ####_        Amazon Linux 2
+  ~~  \_#####\
+  ~~     \###|       AL2 End of Life is 2025-06-30.
+  ~~       \#/ ___
+   ~~       V~' '->
+    ~~~         /    A newer version of Amazon Linux is available!
+      ~~._.   _/
+         _/ _/       Amazon Linux 2023, GA and supported until 2028-03-15.
+       _/m/'           https://aws.amazon.com/linux/amazon-linux-2023/
+
+⇒AWS:EC２に接続したら、Apacheを用意しよう

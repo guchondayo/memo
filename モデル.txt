@@ -1,0 +1,36 @@
+★models.py ファイルについて
+
+DjangoのモデルはPythonのクラスであり、それを使用してデータベースのテーブルを定義します。
+モデルのクラス変数はテーブルのカラムに対応し、モデルのインスタンスはデータベースのレコードに対応します。
+
+
+from django.db import models
+
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
+1.DBからモデルを取得しましょう
+2.各テーブルのモデルを作りましょう
+2.各テーブルのモデルにカラム名を定義しましょう
+4.def __str__(self):
+→
+①モデルクラス (models.Model を継承する)
+モデルはDjangoアプリケーション内で定義されるPythonのクラスです。
+モデルクラスはmodels.Model クラスを継承して定義されます。
+モデルクラスのクラス変数は、テーブルのカラムに対応します。
+②モデルごとのテーブル
+各モデルクラスは、データベース内に対応するテーブルを作成します。
+テーブル名はモデルクラスの名前に基づいて自動的に生成されますが、class Meta 内でカスタマイズも可能です。
+③属性（クラス変数）
+モデルクラスの属性（クラス変数）は、テーブルのカラムに対応します。
+属性の型や設定は、フィールドクラス（例：models.CharField、models.IntegerField）を使用して指定します。
+このようにして、モデルを定義することで、データベースのテーブルとその構造をPythonのコードで表現し、簡単に操作できるようになります。
+
+ def __str__(self):
+        return self.title
+これってどういう意味？
+→正確に言えば、<__main__.Book object at 0x7f31645645e0> のような出力が得られる可能性があります。
+<__main__.Book object at 0x7f31645645e0>

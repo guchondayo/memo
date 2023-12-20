@@ -1,0 +1,46 @@
+●シリアライザのメソッド
+	★CRUDその他の動作によって、処理を書く必要が発生します
+	●大まかな流れ
+		1.リクエストを取得
+		2.リクエストが存在→userフィールドのデータ(インスタンス)の同じカラムにリクエストの中身を代入
+		3.(インスタンスを保存)
+
+1. `__init__(self, instance=None, data=empty, **kwargs)`
+   - シリアライザーのインスタンスを初期化するコンストラクタ。
+   - `instance`: モデルのインスタンス（更新時に使用）。
+   - `data`: バリデーションやデシリアライズ対象のデータ。
+   - `kwargs`: その他のキーワード引数。
+
+2. `to_representation(self, instance)`
+   - モデルインスタンスをシリアライズした結果を返すメソッド。
+   - `instance`: モデルのインスタンス。
+
+3. `to_internal_value(self, data)`
+   - 受け取ったデータをバリデーションおよびデシリアライズするメソッド。
+   - `data`: バリデーションおよびデシリアライズ対象のデータ。
+
+4. `create(self, validated_data)`
+   - モデルインスタンスの新規作成を行うメソッド。
+   - `validated_data`: バリデーションを通過したデータ。
+
+5. `update(self, instance, validated_data)`
+   - モデルインスタンスの更新を行うメソッド。
+   - `instance`: 更新対象のモデルインスタンス。
+   - `validated_data`: バリデーションを通過したデータ。
+
+6. `delete(self, instance)`
+   - モデルインスタンスの削除を行うメソッド。
+   - `instance`: 削除対象のモデルインスタンス。
+
+●中身
+
+# <ExampleSerializer(instance=None)>
+
+print(instance)  # <UserInfo: 1 - new_user>
+<instance はモデルのインスタンス>
+print(serializer.instance)  # <UserInfo: 1 - new_user>
+<data>リクエストから送信されたデータそのものを指します
+# {'user': {'username': 'new_user', 'email': 'new@example.com'}, 'birth_day': '1990-01-01', 'age': 30}
+<validated_data>data をバリデーション（検証）した結果のデータです。
+# {'user': {'username': 'new_user', 'email': 'new@example.com'}, 'birth_day': '1990-01-01', 'age': 30}
+data→バリデーション→dalidation_data

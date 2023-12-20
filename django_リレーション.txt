@@ -1,0 +1,175 @@
+●リレーションについて
+★リレーションはいくつあるの
+1.一対一
+2.一対多
+3.多対多
+★リレーションを組むメリット
+＊＊関連するテーブルのアクセスが早くなる
+<リレーションがない場合>
+```
+# models.py
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=100)
+
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+
+class Grade(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
+    score = models.DecimalField(max_digits=5, decimal_places=2)
+```
+```
+# models.py
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=100)
+
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+
+class Grade(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
+    score = models.DecimalField(max_digits=5, decimal_places=2)
+```
+1.ユーザーのIDを取得
+2.科目テーブルに登録されている外部キーを抽出
+3.抽出したレコードの中で○○というカラムのデータを取得
+4.返却する
+
+
+<リレーションがある場合>
+```
+# models.py
+from django.db import models
+
+class Student(models.Model):
+    name = models.CharField(max_length=100)
+
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+    students = models.ManyToManyField('Student', related_name='subjects')
+
+# 学生のデータを取得し、受講している科目も表示する例
+students = Student.objects.all()
+
+for student in students:
+    subjects_taken = student.subjects.all()
+    subject_names = ', '.join([subject.name for subject in subjects_taken])
+    print(f"学生名: {student.name}, 受講科目: {subject_names}")
+```
+★大事なメリット
+```
+ subjects_taken = student.subjects.all()
+```
+こういったAテーブルのBテーブルというまとめて取得できるのである！！！ 
+
+●以下かきかた
+１対１（One-to-One）リレーションシップ:
+ユーザー（User）とプロフィール（UserProfile）の関係を例にします。1人のユーザーは1つのプロフィールを持ちます。
+
+python
+Copy code
+from django.db import models
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # その他のフィールド
+
+class User(models.Model):
+    # ユーザーモデルのフィールド
+図:
+
+sql
+Copy code
++--------------+      +--------------+
+|    User      |      | UserProfile |
++--------------+      +--------------+
+|   ...        | <--- |    user      |
++--------------+      |   ...        |
+                      +--------------+
+１体多（One-to-Many）リレーションシップ:
+投稿（Post）とコメント（Comment）の関係を例にします。1つの投稿は複数のコメントを持ちます。
+
+python
+Copy code
+from django.db import models
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    # その他のフィールド
+
+class Post(models.Model):
+    # 投稿モデルのフィールド
+図:
+
+lua
+Copy code
++--------------+      +--------------+
+|    Post      |      |   Comment    |
++--------------+      +--------------+
+|   ...        | ---> |    post      |
++--------------+      |   ...        |
+                      +--------------+
+多体多（Many-to-Many）リレーションシップ:
+学生（Student）と科目（Subject）の関係を例にします。1人の学生は複数の科目を受講し、1つの科目は複数の学生に受講されます。
+
+python
+Copy code
+from django.db import models
+
+class Student(models.Model):
+    subjects = models.ManyToManyField(Subject)
+    # その他のフィールド
+
+class Subject(models.Model):
+    # 科目モデルのフィールド
+図:
+
+lua
+Copy code
++--------------+      +--------------+
+|   Student    |      |   Subject    |
++--------------+      +--------------+
+|   ...        | <--> |   ...        |
+|   subjects   |      |              |
++--------------+      +--------------+
+以上が、それぞれのリレーションシップに対するモデルの書き方と図です。これにより、異なるテーブル間での関連を効果的に表現し、コードをより効率的に記述できます。
+
+
+
+
+User
+これだけでいいんだね
+ChatGPT
+はい、それで大丈夫です！リレーションシップの基本的な考え方と、DRFでのモデルの書き方を理解していただければ幸いです。もしご質問や疑問があればいつでもお気軽にお尋ねください。お役に立てて嬉しいです！
+
+
+
+
+User
+model.cascadeはどういう意味？
+ChatGPT
+models.CASCADEは、Djangoのモデルのフィールドの1つで、関連するオブジェクトが削除された場合に、それに関連するオブジェクトも自動的に削除されるよう指定するためのものです。
+
+例えば、親モデルと子モデルが1対多の関係にある場合、親モデルのレコードが削除されると、その親に紐づく子モデルのレコードも同時に削除されるように設定できます。これは「親が削除されたら子も削除される（CASCADE）」という動作を指定することになります。
+
+以下は例です：
+
+python
+Copy code
+from django.db import models
+
+class Parent(models.Model):
+    name = models.CharField(max_length=100)
+
+class Child(models.Model):
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+上記の例では、Childモデルのparentフィールドにmodels.CASCADEを指定しています。これにより、Parentオブジェクトが削除されると、それに関連するChildオブジェクトも自動的に削除されるようになります。
+
+★クエリに関して

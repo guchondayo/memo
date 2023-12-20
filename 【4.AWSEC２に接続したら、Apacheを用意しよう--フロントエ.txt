@@ -1,0 +1,37 @@
+【3.AWS:EC２に接続したら、Apacheを用意しよう--フロントエンド-】
+1.まずは更新作業を行う
+[ec2-user@ip-10-0-0-73 ~]$ sudo yum update -y
+2.apacheをインストールすること
+[ec2-user@ip-10-0-0-73 ~]$ yum install httpd
+3./var/www/htmlに移動すること
+[ec2-user@ip-10-0-0-73 ~]$ cd /var/www/html
+4.適当にファイルを入れてみる
+[ec2-user@ip-10-0-0-73 html]$ sudo vi index.htm
+5.Apacheを起動する
+[ec2-user@ip-10-0-0-73 html]$ sudo systemctl start httpd
+6.ローカルにあるビルド後のファイルを準備する(もしかしたら、プロジェクトごとリモートにデプロイないとだめかも、、)＊distファイルとnode_moduleも含めないとだめかも、、
+6-1:フォルダだと圧縮しないとだめだとのこと
+6-2:Tera TermでローカルPC上のファイルをLinux上へアップロードする方法(teratermだけでできる)（普通にドラックアンドドロップでいけた。。。）
+以下資料↓
+https://ittrip.xyz/soft/linux/tera-term-upload
+https://qiita.com/SECUAL_masa/items/afed756a05c893a3651e
+6-3:teraterm内で解凍する(/var/www/html/sayhellotobike_frontend)
+[ec2-user@ip-10-0-0-73 html]$ sudo unzip dist.zip
+7:再起動する
+
+要編集
+8.nodeをEC2上でインストールする
+AMAZONの公式にやり方が書いてあった
+https://docs.aws.amazon.com/ja_jp/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html
+9:EC2上でnpm install
+10.documentrootの書き換え
+# WEBサーバのドキュメントルートをこのプロジェクトのビルド先に変更
+sudo vi /etc/httpd/conf/httpd.conf
+下記の行を変更
+DocumentRoot "/var/www/html/sayhellotobike_frontend/dist"
+11.再起動
+# WEBサーバを起動
+sudo service httpd start
+【参考資料】
+基本がわかりやすい
+https://www.taskinteractive.com/tec/?p=7

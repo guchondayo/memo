@@ -1,0 +1,12 @@
+【graphql】
+LAMBRAでサーバーレス
+https://aws.amazon.com/jp/builders-flash/202011/comprehend-emotion-form/?awsf.filter-name=*all
+https://www.distant-view.co.jp/column/6408/
+
+Amplify利用準備・初期設定編
+【AWS Amplify × Vue.js 簡単サーバーレスアプリ構築チュートリアル】② Amplify利用準備・初期設定編
+https://qiita.com/minato-naka/items/8e5c0999867d170a5f66
+
+【AWSではdistファイルだけでいいの？】
+1.Documentrootをvar/www/html/distに変更
+2.1のパスにdistファイルを置く

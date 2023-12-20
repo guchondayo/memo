@@ -1,0 +1,100 @@
+from rest_framework import serializers
+from .models import Book
+
+*Serializerについて
+
+class BookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Book
+        fields = ['title', 'author']  # 表示するフィールドを指定
+最低限必要なもの
+* serializers
+→meta＝Meta クラスはモデルを指定し、そのモデルのフィールドを元にシリアライザを作成(なくてもserializers.CharField(max_length=100))
+→大事なのは、serializerにフィールドを登録することなんだね
+* model
+* field　# 表示するフィールドを指定
+データの変換（シリアライズ）
+
+
+
+★Serializerのおかけで以下のことをしてくれる
+→自分でJSON形式に変換
+→バリデーション
+→ネストされたデータをfor分できれいにしないといけない
+→コードの保守性
+
+＊以下＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+1. **データの加工**: シリアライザを使用しない場合、データベースモデルのインスタンスやクエリセットを直接APIのレスポンスとして提供する必要があります。これには手動で辞書やリストに変換する処理が必要になります。
+→どうやら、serializerを使わないと自分でJSON式に変換しないと行けないらしい
+2. **バリデーション**: リクエストデータのバリデーションも手動で行う必要があります。入力データの妥当性を確認し、エラーメッセージを生成して返す処理を自分で実装する必要があります。
+→バリデーションを簡単にするメソッドが用意されているよ
+3. **ネストされたデータの処理**: 関連するモデルの情報を含めたい場合、ネストされたデータを手動で組み立てる必要があります。
+→forinとかするのめんどくさいでしょ
+4. **コードの保守性**: シリアライザを使用しない場合、データの変換やバリデーション、関連データの取得などの処理がビュークラス内に混在してしまう可能性があり、コードの保守性が低下する可能性があります。
+→一か所にまとまっていたほうがいいでしょ
+シリアライザはこれらの作業を効率的に行うためのツールであり、コードの再利用性や保守性を高める助けとなります。したがって、一般的にはシリアライザを使用することが推奨されます。
+
+★もしもなかったらシリーズ
+●1.3JSONの処理＋連想配列に修正する
+
+1.データベースから取得したモデルのデータを取得する。
+2.取得したモデルのデータを辞書形式に変換する。0
+3.辞書をJSON形式に変換する。
+from .models import Book
+import json
+
+# データベースからBookモデルのデータを取得
+books = Book.objects.all()
+
+# データを辞書に変換し、JSONに変換
+data = [{"title": book.title, "author": book.author} for book in books]
+json_data = json.dumps(data)
+→json.dumps()関数を使って辞書をJSON形式に変換しています
+●バリデーションの書き方
+```
+from rest_framework import serializers
+
+class BookSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=100)
+    author = serializers.CharField(max_length=100)
+
+    def validate_title(self, value):
+        if "bad" in value:
+            raise serializers.ValidationError("Title contains forbidden word")
+        return value
+
+# バリデーションを通過した場合
+data = {"title": "Good Book", "author": "Author"}
+serializer = BookSerializer(data=data)
+if serializer.is_valid():
+    validated_data = serializer.validated_data
+    print(validated_data)
+else:
+    print(serializer.errors)
+```
+```
+def manual_validation(data):
+    title = data.get("title")
+    author = data.get("author")
+
+    if not title or not author:
+        return {"error": "Title and author are required"}, 400
+
+    if "bad" in title:
+        return {"error": "Title contains forbidden word"}, 400
+
+    return data, None
+
+# バリデーションを通過した場合
+data = {"title": "Good Book", "author": "Author"}
+validated_data, error = manual_validation(data)
+if error is None:
+    print(validated_data)
+else:
+    print(error)
+```
+
+必要なもの
+①metaなどのフィールド
+②バリデーションの記述
+③通過したときの記述

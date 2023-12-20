@@ -1,0 +1,225 @@
+【3.AWS:EC２に接続したら、DB作成しよう--バックエンド】
+参考資料
+https://zenn.dev/uotohotaru/articles/0730f90dbf7a6d
+https://en-junior.com/rds_cli/
+マスターユーザー名
+guchon
+マスターパスワード
+No1satan
+
+
+1.サブネットを『2つ』作成しておく『AZは別にしておく』
+C:\Users\utoto>aws ec2 create-subnet --vpc-id vpc-0e5d3aafc7ce408a9 --cidr-block 192.168.1.0/24 --availability-zone ap-northeast-1a --query Subnet.SubnetId --output text --profile test001
+subnet-05e4820d607020b04
+
+C:\Users\utoto>aws ec2 create-subnet --vpc-id vpc-0e5d3aafc7ce408a9 --cidr-block 192.168.2.0/24 --availability-zone ap-northeast-1c --query Subnet.SubnetId --output text --profile test001
+subnet-02a937f372adfb239
+
+2.上記のサブネットを一つにまとめる
+＊RDSインスタンスを起動するには、複数のサブネットをまとめたサブネットグループというものが必要になります。(違うAZじゃないとだめ)
+
+C:\Users\utoto>aws rds create-db-subnet-group --db-subnet-group-name sayhellotobike-backend-db-subnet-group --db-subnet-group-description "Subnet group for RDS" --subnet-ids subnet-05e4820d607020b04 subnet-02a937f372adfb239 --profile test001
+
+
+{
+    "DBSubnetGroup": {
+        "DBSubnetGroupName": "sayhellotobike-backend-db-subnet-group",
+        "DBSubnetGroupDescription": "Subnet group for RDS",
+        "VpcId": "vpc-0e5d3aafc7ce408a9",
+        "SubnetGroupStatus": "Complete",
+        "Subnets": [
+            {
+                "SubnetIdentifier": "subnet-05e4820d607020b04",
+                "SubnetAvailabilityZone": {
+                    "Name": "ap-northeast-1a"
+                },
+                "SubnetOutpost": {},
+                "SubnetStatus": "Active"
+            },
+            {
+                "SubnetIdentifier": "subnet-0f053e0b0ddd304be",
+                "SubnetAvailabilityZone": {
+                    "Name": "ap-northeast-1c"
+                },
+                "SubnetOutpost": {},
+                "SubnetStatus": "Active"
+            }
+        ],
+        "DBSubnetGroupArn": "arn:aws:rds:ap-northeast-1:515462926332:subgrp:sayhellotobike-backend-db-subnet-group",
+        "SupportedNetworkTypes": [
+            "IPV4"
+        ]
+    }
+}
+
+3.VPCに対して、セキュリティグループを敷く
+C:\Users\utoto>aws ec2 create-security-group --group-name sayhellotobike-backend-rds-sg --description "Security group for RDS" --vpc-id vpc-0e5d3aafc7ce408a9 --profile test001
+{
+    "GroupId": "sg-02661be143ba6fdd6"
+}
+
+*4.ついにDBの作成(RDS＊以下はポスグレで作成)⇒ポスグレだとDB名の関係で接続できない問題があり、いったんGUIで作ることにした、、********************************************
+sayhellotobike-backend-rds-db
+
+C:\Users\utoto>aws rds create-db-instance --db-instance-identifier sayhellotobike-backend-rds-db --db-instance-class db.t3.micro --vpc-security-group sg-02661be143ba6fdd6 --db-subnet-group sayhellotobike-backend-db-subnet-group --engine postgres --master-username guchon --master-user-password No1satan --allocated-storage 200 --backup-retention-period 3 --profile test001
+{
+    "DBInstance": {
+        "DBInstanceIdentifier": "sayhellotobike-backend-rds-db",
+        "DBInstanceClass": "db.t3.micro",
+        "Engine": "postgres",
+        "DBInstanceStatus": "creating",
+        "MasterUsername": "guchon",
+        "AllocatedStorage": 200,
+        "PreferredBackupWindow": "16:13-16:43",
+        "BackupRetentionPeriod": 3,
+        "DBSecurityGroups": [],
+        "VpcSecurityGroups": [
+            {
+                "VpcSecurityGroupId": "sg-02661be143ba6fdd6",
+                "Status": "active"
+            }
+        ],
+        "DBParameterGroups": [
+            {
+                "DBParameterGroupName": "default.postgres15",
+                "ParameterApplyStatus": "in-sync"
+            }
+        ],
+        "DBSubnetGroup": {
+            "DBSubnetGroupName": "sayhellotobike-backend-db-subnet-group",
+            "DBSubnetGroupDescription": "Subnet group for RDS",
+            "VpcId": "vpc-0e5d3aafc7ce408a9",
+            "SubnetGroupStatus": "Complete",
+            "Subnets": [
+                {
+                    "SubnetIdentifier": "subnet-05e4820d607020b04",
+                    "SubnetAvailabilityZone": {
+                        "Name": "ap-northeast-1a"
+                    },
+                    "SubnetOutpost": {},
+                    "SubnetStatus": "Active"
+                },
+                {
+                    "SubnetIdentifier": "subnet-0f053e0b0ddd304be",
+                    "SubnetAvailabilityZone": {
+                        "Name": "ap-northeast-1c"
+                    },
+                    "SubnetOutpost": {},
+                    "SubnetStatus": "Active"
+                }
+            ]
+        },
+        "PreferredMaintenanceWindow": "sat:18:05-sat:18:35",
+        "PendingModifiedValues": {
+            "MasterUserPassword": "****"
+        },
+        "MultiAZ": false,
+        "EngineVersion": "15.4",
+        "AutoMinorVersionUpgrade": true,
+        "ReadReplicaDBInstanceIdentifiers": [],
+        "LicenseModel": "postgresql-license",
+        "OptionGroupMemberships": [
+            {
+                "OptionGroupName": "default:postgres-15",
+                "Status": "in-sync"
+            }
+        ],
+        "PubliclyAccessible": false,
+        "StorageType": "gp2",
+        "DbInstancePort": 0,
+        "StorageEncrypted": false,
+        "DbiResourceId": "db-IEJ3VCIVFSLSYI7SJIURF3JPME",
+        "CACertificateIdentifier": "rds-ca-2019",
+        "DomainMemberships": [],
+        "CopyTagsToSnapshot": false,
+        "MonitoringInterval": 0,
+        "DBInstanceArn": "arn:aws:rds:ap-northeast-1:515462926332:db:sayhellotobike-backend-rds-db",
+        "IAMDatabaseAuthenticationEnabled": false,
+        "PerformanceInsightsEnabled": false,
+        "DeletionProtection": false,
+        "AssociatedRoles": [],
+        "TagList": [],
+        "CustomerOwnedIpEnabled": false,
+        "BackupTarget": "region",
+        "NetworkType": "IPV4",
+        "StorageThroughput": 0,
+        "CertificateDetails": {
+            "CAIdentifier": "rds-ca-2019"
+        },
+        "DedicatedLogVolume": false
+    }
+}
+5.今のままだと、EC2→RDSへのポートが解放されていないので、このルートのセキュリティグループを作成
+EC2のセキュリティグループ→RDSのセキュリティグループ
+C:\Users\utoto>aws ec2 authorize-security-group-ingress --group-id sg-02661be143ba6fdd6 --protocol tcp --port 5432 --source-group sg-001d06d42e2a23a38 --profile test001
+{
+    "Return": true,
+    "SecurityGroupRules": [
+        {
+            "SecurityGroupRuleId": "sgr-0da6f1aee838d9fba",
+            "GroupId": "sg-02661be143ba6fdd6",
+            "GroupOwnerId": "515462926332",
+            "IsEgress": false,
+            "IpProtocol": "tcp",
+            "FromPort": 5432,
+            "ToPort": 5432,
+            "ReferencedGroupInfo": {
+                "GroupId": "sg-001d06d42e2a23a38",
+                "UserId": "515462926332"
+            }
+        }
+    ]
+}
+
+
+***エンドポイントを確認しておく＊＊＊
+C:\Users\utoto>aws rds describe-db-instances --db-instance-identifier sayhellotobike-backend-rds-db --output text --profile test001
+DBINSTANCES     stopped 200     True    ap-northeast-1c 3       region  rds-ca-2019     False   False   arn:aws:rds:ap-northeast-1:515462926332:db:sayhellotobike-backend-rds-db        db.t3.micro     sayhellotobike-backend-rds-db   available       0       db-IWX3N3VHU3QSUYDYPKFGA5GWFU   False   False   postgres        15.4    False   2023-12-19T14:43:07.820000+00:00        False   2023-12-19T23:29:35+00:00       postgresql-license      guchon  0       False   IPV4    False   14:07-14:37     tue:15:49-tue:16:19     False   False   0       gp2
+CERTIFICATEDETAILS      rds-ca-2019     2024-08-22T17:08:50+00:00
+DBPARAMETERGROUPS       default.postgres15      in-sync
+DBSUBNETGROUP   Subnet group for RDS    sayhellotobike-backend-db-subnet-group  Complete        vpc-0e5d3aafc7ce408a9
+SUBNETS subnet-05e4820d607020b04        Active
+SUBNETAVAILABILITYZONE  ap-northeast-1a
+SUBNETS subnet-0f053e0b0ddd304be        Active
+SUBNETAVAILABILITYZONE  ap-northeast-1c
+ENDPOINT        sayhellotobike-backend-rds-db.cpnrvc8q8ezo.ap-northeast-1.rds.amazonaws.com     Z24O6O9L7SGTNB  5432
+OPTIONGROUPMEMBERSHIPS  default:postgres-15     in-sync
+VPCSECURITYGROUPS       active  sg-02661be143ba6fdd6
+
+
+＊＊EC２→RDSに接続する＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊＊
+1.SSHで接続をしておく(割愛)
+2.重要：EC２にもポスグレをインストールしておく(amazon-linux-extraパッケージをつかってインストールしておくこと⇒EC2内のポスグレのインストールして、最新版にしておくことが大事)
+https://zenn.dev/uotohotaru/articles/0730f90dbf7a6d
+3.EC2からエンドポイントを使って接続する
+【なんなんだよまじで、、やっと接続できた】
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_ConnectToPostgreSQLInstance.html#USER_ConnectToPostgreSQLInstance.Troubleshooting-DBname
+以下正解
+[ec2-user@ip-192-168-0-210 ~]$ psql --host=sayhellotobike-backend-rds-db.cpnrvc8q8ezo.ap-northeast-1.rds.amazonaws.com --port=5432 --username=guchon --dbname postgres
+Password for user guchon:
+psql (14.8, server 15.4)
+WARNING: psql major version 14, server major version 15.
+         Some psql features might not work.
+SSL connection (protocol: TLSv1.2, cipher: ECDHE-RSA-AES256-GCM-SHA384, bits: 256, compression: off)
+Type "help" for help.
+【学んだこと】
+1.postgresはamazon-linux-extraパッケージで常に最新版にしておく
+2.ポスグレはDB名を指定しないとだめらしい
+3.DB名はpostgresにしないとだめらしい。。
+GUIにDB名なんかねぇじゃねぇかよ！！！！！！
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html#CHAP_GettingStarted.Creating.PostgreSQL
+致命的エラー: データベース名が存在しません。以下を見て解決、、
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_ConnectToPostgreSQLInstance.html#USER_ConnectToPostgreSQLInstance.Troubleshooting-DBname
+
+【トラブル解決までの糸口】
+接続時にFATAL: database name does not existのようなエラーが発生する場合、デフォルトのデータベース名 postgres を --dbname オプションに使用してみてください。
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_ConnectToPostgreSQLInstance.html
+データベースがないってよ
+psql: error: connection to server at "sayhellotobike-backend-rds-db.cpnrvc8q8ezo.ap-northeast-1.rds.amazonaws.com" (192.168.2.115), port 5432 failed: FATAL:  database "sayhellotobike-backend-rds-db" does not exist
+→多分ポート名はあっている、普通にやったら反応なし
+[ec2-user@ip-192-168-0-210 ~]$ psql --host=sayhellotobike-backend-rds-db.cpnrvc8q8ezo.ap-northeast-1.rds.amazonaws.com --port=5433 --username=guchon --d sayhellotobike-backend-rds-db
+DBの名前を探すのってめんどくさかった、、
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/USER_ConnectToPostgreSQLInstance.html
+そしたら、DB名が入っていないので再度確認
+https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/UserGuide/Overview.DBInstance.html

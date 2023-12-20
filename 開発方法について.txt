@@ -1,0 +1,76 @@
+★PostgreSQL15 をインストールする
+★PostgreSQL15にて【tohoku-univ-radiation-worker-applicant】DBを作成する
+インストール URL
+https://www.enterprisedb.com/postgresql-tutorial-resources-training?uuid=4726a163-a071-4af4-8395-6d239c34d4a1&campaignId=Product_Trial_PostgreSQL_15
+
+★バージョン管理ツールインストール(バージョンはなんでもいい)
+nvm
+fnm
+→Node.js バージョン管理ツールを使用している場合はそちらを使用してもらっても構わない
+★Node.js インストール(v18.15.00)に指定すること
+※fnm の場合
+$fnm install v18.15.0
+$fnm use v18.15.0
+$node -v
+v18.15.0
+// デフォルト指定したい場合は以下のコマンドを実行
+$fnm default v18.15.0
+★1.のパッケージ管理からyarn をインストールし、パッケージをインストールする
+
+$ npm install -g yarn
+$ cd tohoku-univ-radiation-worker-applicant
+$ yarn install
+
+★バックエンドの開発
+
+★サーバサイドライブラリ群（h3）をインストールする
+https://www.jsdocs.io/package/h3
+
+★prisma関係
+初期マイグレーションSQL生成 ... npx prisma migrate dev
+既存DBのスキーマ取得 ... npx prisma db pull
+
+
+// 開発
+DBスキーマの同期 ... npx prisma db push
+マイグレーションSQL生成 ... npx prisma migrate dev
+Prisma Clientの生成 ... npx prisma generate
+// 本番
+マイグレーション履歴の設定 ... npx prisma migrate resolve
+マイグレーションの実行 ... npx prisma migrate deploy
+
+起動してみる
+
+$ yarn run dev
+
+
+
+
+参考
+ORMapper（prisma）
+https://www.prisma.io/
+
+https://typescript-jp.gitbook.io/deep-dive/nodejs
+
+
+
+★A5SQLをインストールしておくこと
+
+developブランチにQST様の実装の対応を取り込みました。
+本対応に伴い、サーバの起動方法に変更がありますので、ご注意ください。
+
+【サーバ起動方法の変更点】
+・「yarn run dev」コマンドで使用するenvファイルが「.env」⇒「.env.local」に変更になりました。
+　最新環境をGitから取得しますと、開発環境に.env.localファイルがありますので、そちらのDBのポート情報を適宜修正してください。
+　.envファイルは不要となりますので、削除していただいて構いません。
+
+
+
+情報共有です。
+昨日のQST様の差分取込で、.envファイルを使用しなくなった影響で、prismaのマイグレーションコマンドが実行できなくなっています。
+開発時にprismaのマイグレーションを行う際は、.env.localをコピーして.envファイルを作成してください。
+
+.envファイルが存在しますと、ビルドコマンドに影響するため、お手数ですがprismaのマイグレーションを行う際のみ.envファイルを作成するようにしてください。
+
+恒久対応は別途必要になりますが、暫定対応の情報共有でした。
+

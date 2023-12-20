@@ -1,0 +1,26 @@
+
+★パスの通し方
+set PATH=%PATH%;C:\Program Files\PostgreSQL\15
+★パスの確認方法
+echo %PATH%
+★ポスグレのログイン方法
+psql -U postgres
+★DB
+psql -U postgres　-d DB名
+★URL　https://sebenkyo.com/2020/11/05/post-1615/
+psql "postgresql://{ホスト名}:{ポート番号}/{DB名}?user={ユーザ名}&password={パスワード}"
+Bash
+
+
+https://qiita.com/akuden/items/a88630de9624039c4135
+
+★nodeのインストール方法
+https://github.com/coreybutler/nvm-windows/releases
+nvm install 18.15.0
+nvm use 18.15.0
+
+ psql "postgresql://postgres:postgres@localhost:5432/tohoku_univ_radiation_worker_db"
+
+
+★GIT
+ssh-add 

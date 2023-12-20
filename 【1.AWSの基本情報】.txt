@@ -1,0 +1,122 @@
+【1.AWSの基本情報】
+クラウドサーバー
+EDI：統合開発環境
+⇒実機がなく、クラウド上でソースを管理できる＋EDIといった開発環境まで用意してくれているのが特徴
+
+主な機能
+VPC (Virtual Private Cloud): AWS上でプライベートネットワークを構築するためのサービス。リソースを論理的に分離し、セキュリティグループやネットワークACLなどを使用して通信を制御できます。
+⇒ネットワーク全体を管理する機能(ルーティング)
+EC2 (Elastic Compute Cloud): AWS上で仮想サーバー（インスタンス）を起動するサービス。異なるインスタンスタイプがあり、用途に応じて選択できます。
+⇒オンプレミスでいうと、サーバーマシン
+⇒大体実行ファイル等々を置いていることが多い
+S3 (Simple Storage Service): クラウド上でオブジェクトを保存するためのストレージサービス。データの冗長性や耐久性が高く、様々な用途に利用されます。
+⇒オンプレミスでいうと外付けHDDみたいな、リソースを置いておく
+⇒リソースを置いておく
+IAM (Identity and Access Management): AWSリソースへのアクセスを管理するサービス。ユーザー、グループ、ロールなどを定義し、それぞれに権限を設定できます。
+⇒『AWS』そのものにアクセスできるかどうかのアクセス管理を行う場所
+RDS (Relational Database Service): 簡単にスケーラブルなリレーショナルデータベースを構築・管理するためのサービス。MySQL、PostgreSQL、Oracleなどがサポートされています。
+⇒オンプレでいうとデータベースサーバー
+Lambda: サーバーレスコンピューティングを提供するサービス。コードが実行される際に必要なインフラストラクチャをユーザーが意識せずに利用できます。
+⇒サーバーレスというのは、サーバで必要な設定をそもそもやってくれること（オンプレでいうと、アパッチを導入してめんどくさい設定ファイルを修正したりするのがなくなるってこと）
+⇒プロビジョニングシステム：OSの設定や、、OSのインストール、ドライバの設定、アプリケーションのインストール、ファイルをサーバーにアップロードするとかの『準備』
+⇒その中で、実行環境まで上げることの総称を『デプロイ』という
+Route 53: AWSが提供するドメイン登録やDNSサービス。ドメインの管理やトラフィックのルーティングを行います。
+⇒オンプレでいうとドメイン登録やDNSサーバー
+CloudFormation: インフラストラクチャをコードで管理するためのサービス。テンプレートを使用してAWSリソースを定義し、デプロイできます。
+⇒インフラ管理をテンプレ化しているからコードを変えるだけで簡単
+Elastic Load Balancing (ELB): トラフィックを複数のEC2インスタンスに分散するためのロードバランサーサービス。
+⇒ロードバランサー
+Security Groups: EC2インスタンスやRDSデータベースなどのリソースへのインバウンドおよびアウトバウンドのトラフィックを制御する仮想ファイアウォール。
+⇒オンプレでいうとファイアウォール
+
+これらを活用して開発環境を提供しているのが、『croud9』のことである
+【手順】
+＊AWSCLIをダウンロードする
+＊IAM環境を作成する：ルートユーザーでもcroud9は入れるはずであるが、、
+＊IAMユーザーのプロファイル、SSOを設定する：プロファイル：個人の設定、色んなところでパスワードを求められず一括でログインを済ませることのできる設定
+＊ログインする
+＊AWScroud9で開発環境を作成する
+【設定ファイル】
+C:\Users\utoto\.aws
+1.config
+2.credentials
+【コマンド】
+SSOの設定
+C:\Users\utoto>aws configure sso
+C:\Users\utoto>aws configure list
+AWSの設定
+aws configure
+aws configure --profile test001
+設定の確認
+C:\Users\utoto>aws ec2 describe-vpcs
+C:\Users\utoto>aws ec2 describe-vpcs --profile test001
+ログイン
+C:\Users\utoto>aws sso login --profile test001
+環境の作成
+aws cloud9 create-environment-ec2 --name getting-started-2 --description "Getting started with AWS Cloud9." --instance-type t2.micro --profile admin-1
+正解
+C:\Users\utoto>aws configure --profile test001
+AWS Access Key ID [****************Y5HN]:
+AWS Secret Access Key [****************qR1l]:
+Default region name [ap-northeast-1]:
+Default output format [json]:
+
+
+【croud9のURL】
+https://my-sso-portal.awsapps.com/start
+【設定ファイルマニュアル】
+1.config
+[profile test001]
+sso_session = test001
+sso_account_id = 515462926332
+sso_role_name = AdministratorAccess
+region = ap-northeast-1
+output = json
+[sso-session test001]
+sso_start_url = https://d-9567531b1f.awsapps.com/start
+sso_region = ap-northeast-1
+sso_registration_scopes = sso:account:access
+[default]
+region = ap-northeast-1
+sso_role_name = AdministratorAccess
+output = json
+2.credentials
+[default]
+aws_access_key_id = AKIAXQA74B76L3W4Y5HN
+aws_secret_access_key = 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
+[test001]
+aws_access_key_id = AKIAXQA74B76L3W4Y5HN
+aws_secret_access_key = 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
+
+確認用
+aws ec2 describe-vpcs --profile test001
+
+
+【トラブルシューティング】
+1.環境変数が登録されていない
+set AWS_SECRET_ACCESS_KEY=USA9L/7sb7KUbeI2iRCeB7ux++Ofu+6Za5VLqR1l
+
+C:\Users\utoto>echo %AWS_ACCESS_KEY_ID% %AWS_SECRET_ACCESS_KEY%
+C:\Users\utoto>set AWS_ACCESS_KEY_ID=AKIAXQA74B76L3W4Y5HN
+AKIAXQA74B76L3W4Y5HN  USA9L/7sb7KUbeI2iRCeB7ux++Ofu+6Za5VLqR1l
+
+C:\Users\utoto>aws configure list
+      Name                    Value             Type    Location
+      ----                    -----             ----    --------
+   profile                <not set>             None    None
+access_key     ****************Y5HN              env
+secret_key     ****************qR1l              env
+    region                <not set>             None    None
+
+Successfully logged into Start URL: https://d-9567531b1f.awsapps.com/start
+aws sso login --prifile test001
+2.トークンが設定されてない（一回ログインすれば？）
+Error loading SSO Token: Token for test001 does not exist
+Partial credentials found in shared-credentials-file, missing: aws_secret_access_key
+aws sso login --profile test001
+
+参考URL
+https://aws.amazon.com/jp/getting-started/guides/setup-environment/
+https://aws.amazon.com/jp/getting-started/guides/setup-environment/module-three/?refid=ha_awssm-evergreen-1st-visit
+
+

@@ -1,0 +1,46 @@
+health-check-information
+training-information
+radiation-exposure-information
+console.log("疎通")
+console.log("body",body)
+console.log("BF", body);
+console.log("AF", body);
+
+【パス】
+【ログイン】
+taniguchi@sra-tohoku.co.jp
+!23Qweasd
+【ログイン】
+taniguchi@sra-tohoku.co.jp
+password1!
+psql -U postgres -d qst_radiation_worker_db -p 5433
+
+
+パスワードを以下に変更して、「!23Qweasd」でログインしてみてください！
+$2a$10$gFzwAZK9HBN5jyDIQPVa.e6eaIqbZ/mGpKNW4gvEdl5r9Ek4sJizu
+
+★ポスグレ
+【仕事用】
+C:\Program Files\PostgreSQL\15
+パスワード：No1s@tan
+postgres
+postgres
+【副業用】
+
+★AWS
+・メールアドレス
+・Gmail用パスワード
+・アカウント名
+・AWSパスワード
+【ルートアカウント】
+・uto.for.aws@gmail.com
+・no1satan⇒怪しい
+・guchon
+・No1s@tan
+【IAMアカウント】
+・uto.for.aws.iam@gmail.com
+・no1satan
+・YutoTaniguchi
+・No1s@tan
+
+

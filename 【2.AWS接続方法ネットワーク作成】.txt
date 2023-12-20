@@ -1,0 +1,83 @@
+【AWS接続方法ネットワーク作成】
+1.AWSCLIにログインしておく
+【参考資料】
+https://en-junior.com/django-aws/#index_id9
+
+https://en-junior.com/vpc_cli/
+【VPCの作成】
+1.VPCの作成
+　1-1:VPCそのものの作成(プライベートIPアドレスが作成される)
+C:\Users\utoto>aws ec2 create-vpc --cidr-block 10.0.0.0/16 --query Vpc.VpcId --output text --profile test001
+vpc-043b902b76c5972b9
+　1-2:タグ付け
+C:\Users\utoto>aws ec2 create-tags --resource vpc-043b902b76c5972b9 --tags Key=Name,Value=sayhellotobike-vpc --profile test001
+
+VPCが作成されていることを確認
+⇒画像1『VPC』
+
+2.「パブリック」サブネットの作成(IPアドレスをどう分割するかってことだよね？)
+C:\Users\utoto>aws ec2 create-subnet --vpc-id vpc-043b902b76c5972b9 --cidr-block 10.0.0.0/24 --availability-zone ap-northeast-1a --query Subnet.SubnetId --output text --profile test001
+subnet-0ea5f00cfc2b17f9c
+　2-2:タグ付け
+C:\Users\utoto>aws ec2 create-tags --resource subnet-0ea5f00cfc2b17f9c --tags Key=Name,Value=sayhellotobike-public-subnet --pro
+file test001
+　2-3:IPアドレスを自動で割り当てられるようにする
+aws ec2 modify-subnet-attribute --subnet-id subnet-0ea5f00cfc2b17f9c --map-public-ip-on-launch
+
+3.インターネットゲートウェイ
+C:\Users\utoto>aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text --profile test001
+igw-04f7bfcb1e1819370
+　3-2:タグ付け
+C:\Users\utoto>aws ec2 create-tags --resource igw-04f7bfcb1e1819370 --tags Key=Name,Value=sayhellotobike-igw --profile t
+est001
+　3-3:インターネットゲートウェイをVPCにアタッチ
+C:\Users\utoto>aws ec2 attach-internet-gateway --vpc-id vpc-043b902b76c5972b9 --internet-gateway-id igw-04f7bfcb1e1819370 --profile test001
+
+4.ルーティングテーブルを作成
+C:\Users\utoto>aws ec2 create-route-table --vpc-id vpc-043b902b76c5972b9 --query RouteTable.RouteTableId --output text --profile test001
+rtb-094108a72e5769e21
+　4-2:タグ付け
+C:\Users\utoto>aws ec2 create-tags --resource rtb-094108a72e5769e21 --tags Key=Name,Value=sayhellotobike-rtb --profile test001
+
+5.ルーティングテーブルの中にゲートウェイを紐づけよう(右)
+C:\Users\utoto>aws ec2 create-route --route-table-id rtb-094108a72e5769e21 --destination-cidr-block 0.0.0.0/0 --gateway-id igw-04f7bfcb1e1819370 --profile test001
+{
+    "Return": true
+}
+
+6.ルーティングテーブルの中にサブネットを紐づけよう(左)
+C:\Users\utoto>aws ec2 associate-route-table --subnet-id subnet-0ea5f00cfc2b17f9c --route-table-id rtb-094108a72e5769e21 --profile test001
+{
+    "AssociationId": "rtbassoc-0b9c13ea7fd6f6f75",
+    "AssociationState": {
+        "State": "associated"
+    }
+}
+
+6.「プライベート」サブネットを作成＊＊＊これは必要に応じて＊＊
+C:\Users\utoto>aws ec2 create-subnet --vpc-id vpc-043b902b76c5972b9 --cidr-block 10.0.1.0/24 --availability-zone ap-northeast-1a --query Subnet.SubnetId --output text --profile test001
+subnet-043f587082bfa4260
+
+C:\Users\utoto>aws ec2 create-tags --resource subnet-043f587082bfa4260 --tags Key=Name,Value=sayhellotobike-private-subnet --profile test001
+
+【サーバー＝EC2＝カギが必要なのでキーペアを作成する】
+$ aws ec2 create-key-pair --key-name sayhello --query 'KeyMaterial' --output text > MyKeyPair.pem 
+
+
+【ネットワークにつなぐには:】
+
+1.パブリックサブネットに配置する：
+EC2インスタンスをパブリックサブネットに配置する必要があります。パブリックサブネットは、直接インターネットと通信できるサブネットです。
+
+2.Elastic IP（EIP）を割り当てる：
+Elastic IPは、EC2インスタンスに静的なパブリックIPアドレスを割り当てるためのものです。これにより、EC2インスタンスが再起動されてもIPアドレスが変わらず、外部からアクセス可能になります。
+
+3.インターネットゲートウェイを設定する：
+インターネットゲートウェイは、VPC内のプライベートサブネットからインターネットへの通信を可能にするコンポーネントです。インターネットゲートウェイをVPCにアタッチし、ルートテーブルを更新してパブリックサブネット内のトラフィックをゲートウェイに向けることで、EC2インスタンスがインターネットにアクセスできるようになります。
+
+4.ルーティングテーブルを設定する：
+ゲートウェイが線路だとしたらその線路をつなげてあげないといけない。それがルーティング。
+ルーティングはVPCに対して一つのテーブルで管理されてます
+つまりVPCを作ったらルーティングを作成してあげましょう
+
+5.それぞれをつなげる

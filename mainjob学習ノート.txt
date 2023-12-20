@@ -1,0 +1,71 @@
+<pagesの書き方>
+グリッドシステムのサポート: <v-container> 内で <v-row> と <v-col> を使用することで、柔軟なグリッドシステムを構築できます。これにより、ページ内のコンテンツを効果的に配置し、レスポンシブなデザインを実現できます。
+→<div>と同じ
+つまり逆を返せば<v-container> 内でないと
+ <v-row> と <v-col>は使えない？
+ →使えない
+ →<v-container>コンポーネントには、基本的なオプションは存在しません
+ →　デフォルトで代々幅
+ <v-row>
+ 
+幅の制御: <v-container> はデフォルトで最大幅を持ち、ページ全体の幅を制御します。このため、コンテンツが画面の幅に合った見た目になります。
+→ディブタグと同じ
+
+中央揃え: <v-container> 内でコンテンツを中央に揃えることが容易です。class 属性やプロパティを使用して、水平および垂直方向の中央揃えを設定できます。
+★比較すると。。
+<style scoped>
+.align-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+</style>
+
+<style scoped>
+.flex-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 他のスタイル */
+}
+</style>
+
+●<v-row>
+
+→  display: flex;が歩かないかの違い
+→　<v-row> 自体には基本的なオプションはありません。
+●<v-col>
+→グリッドを12等分していてその分のどの割合かを書いている気がする
+→合計して足りなくなったら余りは余白になるらしい
+
+<template>
+  <v-container>
+    <v-row>
+      <v-col cols="4">Column 1</v-col>
+      <v-col cols="3">Column 2</v-col>
+      <v-col cols="2">Column 3</v-col>
+    </v-row>
+  </v-container>
+</template>
+
+→vuetifyに関してはタグにCSSを書くことが一般で
+→汎用性を高くしたいときはセレクタを使うかも
+
+<v-form align="center" class="mb-10" ref="form">
+
+this.$refs.form
+でアクセスできるようにする
+ <v-text-field v-model="inputValue" />
+ →ふつうはinputやtextfieldにv-modelにしますよね
+ variant プロパティは、Vuetifyのコンポーネントにおいて、コンポーネントの外観やスタイルのバリエーションを指定するためのプロパティです。
+ 
+ 
+ ●入力するフィールドについてひつようなもの
+ v-model="loginForm.mail_address"→これは変数みたいなもの
+  :label="$t('label.email')"→上に書いてあること
+  
+  
+ 
+ 〇useNuxtApp()
+ 
